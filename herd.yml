@@ -1,0 +1,8 @@
+name: Medium-Clone-Php-Project
+php: '8.4'
+secured: false
+aliases: { }
+services: { }
+integrations:
+  forge: { }
+
