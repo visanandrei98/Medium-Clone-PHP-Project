@@ -5,6 +5,7 @@ namespace Database\Seeders; // 📦 Declară namespace-ul unde se află acest se
 use App\Models\User;
 use App\Models\Category; // 📥 Importă modelul Category pentru a putea insera în tabela 'categories'
 use App\Models\Post;     // 📥 Importă modelul Post pentru a crea postări cu factory
+use Illuminate\Support\Facades\Hash;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents; // ❌ (opțional) se poate folosi pentru seedere fără evenimente model
 
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder // 🧱 Seeder-ul principal al aplicației (
         User::factory()->create([
             'name' => 'test',
             'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
         ]); //Pentru a evita eorri de tipul: "Eloquent: No primary key defined on model App\Models\User" se creeaza un user cu datele de mai sus
        $categories = [
         'Tehnology',
@@ -35,8 +37,7 @@ class DatabaseSeeder extends Seeder // 🧱 Seeder-ul principal al aplicației (
             'name' => $category,
         ]); // 🧱 Creează un rând în tabela 'categories' cu numele respectiv
        }
-
-       Post::factory(100)->create(); 
+    //    Post::factory(100)->create(); 
        // 🏭 Apelează PostFactory de 100 de ori pentru a genera 100 de postări false
        // 📎 Fiecare post primește o categorie random din cele 6 create mai sus (prin category_id în factory)
        // ⚠️ user_id e hardcodat (1) — se poate schimba ulterior cu user random
