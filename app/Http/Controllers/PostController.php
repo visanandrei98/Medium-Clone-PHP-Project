@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers; // Spațiul de nume al controllerului – specifică unde e poziționat în structură
 
+use App\Http\Requests\PostCreateRequest;
 use App\Models\Post;         // Importă modelul Post (legat de tabela posts)
 use App\Models\Category;     // Importă modelul Category (legat de tabela categories)
 use Illuminate\Http\Request; // Importă clasa Request – folosită pentru a accesa date din formulare HTTP
 use Illuminate\Support\Str; // Importă clasa Str pentru a lucra cu slug-uri
 use Illuminate\Support\Facades\Auth;
+
 
 class PostController extends Controller // Controllerul gestionează toate acțiunile legate de modelul Post
 {
@@ -40,19 +42,12 @@ class PostController extends Controller // Controllerul gestionează toate acți
      * Stochează o nouă postare în baza de date.
      * Se folosește în ruta POST /posts
      */
-    public function store(Request $request)
+    public function store(PostCreateRequest $request)
     {
-        $data = $request -> validate([
-            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
-            'title' => 'required',
-            'content' => 'required',
-            'category_id' => ['required', 'exists:categories,id'],
-            'published_at' => ['nullable', 'datetime'],
-           
-        ]);
+        $data = $request -> validated();
 
         $image = $data['image'];
-        unset($data['image']);
+        //unset($data['image']);
         $data['user_id'] = Auth::user()->id;
         $data['slug'] = Str::slug($data['title']);
 

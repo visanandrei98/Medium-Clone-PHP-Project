@@ -31,9 +31,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        
+        $name = fake()->name();
         return [
-            'name' => fake()->name(), 
+            'name' => $name, 
             // 🧑 Nume generat aleator (ex: John Doe)
+
+            'username' => Str::slug($name),
+            
 
             'email' => fake()->unique()->safeEmail(), 
             // 📧 Email unic și valid generat aleator

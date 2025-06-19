@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder // 🧱 Seeder-ul principal al aplicației (
     public function run(): void // 🚀 Metoda care rulează automat când dai php artisan db:seed
     {
         User::factory()->create([
-            'name' => 'test',
+            'name' => 'test user',
+            'username' => 'testuser',
             'email' => 'test@example.com',
             'password' => Hash::make('password123'),
         ]); //Pentru a evita eorri de tipul: "Eloquent: No primary key defined on model App\Models\User" se creeaza un user cu datele de mai sus
