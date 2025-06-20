@@ -19,7 +19,7 @@
 
         @if($user -> image)
             <div>
-                <img src ="{{ Storage::url($user->image) }}" alt="{{ $user->name }}" class="rounded-full w-16 h-16">
+                <img src ="{{$user->imageUrl()}}" alt="{{ $user->name }}" class="rounded-full w-16 h-16">
             </div>
         @endif
 
@@ -78,7 +78,7 @@
         <div class="mt-4">
             <x-input-label for="bio" :value="__('Bio')" />
             <x-input-textarea id="bio" class="block mt-1 w-full" name="bio">
-                {{ old('bio', $user->bio) }}
+                {{ old('bio',auth()->user()->bio)}}
             </x-input-textarea>
             <x-input-error :messages="$errors->get('bio')" class="mt-2" />
         </div>

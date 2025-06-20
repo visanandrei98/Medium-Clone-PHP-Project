@@ -63,9 +63,11 @@ class PostController extends Controller // Controllerul gestionează toate acți
      * Afișează o singură postare individual.
      * Se folosește în ruta GET /posts/{id}
      */
-    public function show(Post $post)
+    public function show(string $username, Post $post)
     {
-        // return view('posts.show', compact('post'));
+        return view('post.show', [
+            'post' => $post
+        ]); // return view('posts.show', compact('post'));
     }
 
     /**
