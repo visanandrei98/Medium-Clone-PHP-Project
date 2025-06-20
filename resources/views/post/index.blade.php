@@ -11,8 +11,8 @@
 
             {{-- Afișare postări --}}
             <div class="mt-8">
-                @forelse ($posts as $post)
-                    <x-post-item :post="$post" />
+                @forelse ($posts as $p)
+                    <x-post-item :post="$p" />
                 @empty
                     <div class="text-center text-gray-400 py-16">
                         No posts yet

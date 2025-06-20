@@ -1,5 +1,5 @@
 <x-app-layout> {{-- Folosește layout-ul global definit de Laravel Breeze --}}
-    <div class="py-12">
+    <div class="py-4">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg px-8">
                 <h1 class="text-2xl font-bold mb-4">
@@ -8,20 +8,14 @@
 
                 <!--User Avatar -->
                 <div class="flex gap-4">
-                    @if($post->user->image)
-                        <img src="{{ $post->user->imageUrl()}}" alt="{{ $post->user->name }}"
-                            class="w-16 h-16 rounded-full">
-                    @else
-                        <img src="https://static.everypixel.com/ep-pixabay/0329/8099/0858/84037/3298099085884037069-head.png"
-                            alt="Dummy Avatar" class="w-16 h-16 rounded-full">
-                    @endif
+                    <x-user-avatar :user = "$post->user" />
 
 
                     <div>
-                        <div>
-                            <h3>
+                        <div class="flex gap-2">
+                            <a href="{{ route('profile.show', $post->user) }}" class="hover:underline">
                                 {{ $post->user->name }}
-                            </h3>
+                            </a>
                             &middot;
                             <a href="#" class="text-emerald-500">
                                 Follow
