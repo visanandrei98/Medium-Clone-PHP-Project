@@ -1,4 +1,4 @@
-@props( ['user', 'size' => 'w-16 h-16'] )
+@props(['user', 'size' => 'w-16 h-16'])
 
 
 @if($user->image)

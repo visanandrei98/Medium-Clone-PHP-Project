@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -55,6 +58,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Post::class);
     }
 
+    public function followers(){
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
+    }
+
+    public function following(){
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+    }
+
     public function imageUrl(){
         if ($this->image) {
             return Storage::url($this->image);
@@ -62,4 +73,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return null;
     }
+
+    public function isFollowedBy(?User $user)
+    {
+        if (!$user) {
+            return false;
+        }
+        return $this->followers()->where('follower_id', $user->id)->exists();
+    }
 }
+
+
