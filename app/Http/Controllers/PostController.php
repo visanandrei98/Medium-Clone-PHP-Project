@@ -19,7 +19,7 @@ class PostController extends Controller // Controllerul gestionează toate acți
     public function index()
     {
        
-        $posts = Post::orderBy('created_at', 'desc')->paginate(5); // Ia ultimele 5 postări paginate
+        $posts = Post::latest()->paginate(5); // Ia ultimele 5 postări paginate
         return view('post.index', [     // Trimite datele către view-ul index.blade.php(din post folder)
             
             'posts' => $posts
@@ -95,6 +95,13 @@ class PostController extends Controller // Controllerul gestionează toate acți
     public function destroy(Post $post)
     {
         // $post->delete(); return redirect()->route('posts.index');
+    }
+
+    public function category(Category $category){
+        $posts = $category->posts()->latest()->simplePaginate(5);
+        return view('post.index', [
+            'posts' => $posts
+        ]);
     }
 }
 
