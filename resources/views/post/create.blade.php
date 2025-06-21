@@ -1,6 +1,9 @@
 <x-app-layout> {{-- Folosește layout-ul global definit de Laravel Breeze --}}
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <h1 class="text-3xl mb-4">
+                Create new Post
+            </h1>
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg px-8">
                 <form action="{{ route('post.store')}}" enctype="multipart/form-data" method="post">
 
@@ -47,6 +50,15 @@
                         </x-input-textarea>
                         <x-input-error :messages="$errors->get('content')" class="mt-2" />
                     </div>
+
+                     <!-- Published at -->
+                    <div class="mt-4">
+                        <x-input-label for="published_at" :value="__('Published_At')" />
+                        <x-text-input id="published_at" class="block mt-1 w-full" type="datetime-local" name="published_at"
+                            :value="old('published_at')"  autofocus />
+                        <x-input-error :messages="$errors->get('published_at')" class="mt-2" />
+                    </div>
+
 
                     <x-primary-button class="mt-4">
                         Submit

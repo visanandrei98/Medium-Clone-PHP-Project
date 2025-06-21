@@ -1,118 +1,162 @@
 <?php
 
-namespace App\Http\Controllers; // Spațiul de nume al controllerului – specifică unde e poziționat în structură
+namespace App\Http\Controllers;
 
 use App\Http\Requests\PostCreateRequest;
-use App\Models\Post;         // Importă modelul Post (legat de tabela posts)
-use App\Models\Category;     // Importă modelul Category (legat de tabela categories)
-use Illuminate\Http\Request; // Importă clasa Request – folosită pentru a accesa date din formulare HTTP
-use Illuminate\Support\Str; // Importă clasa Str pentru a lucra cu slug-uri
+use App\Http\Requests\PostUpdateRequest;
+use App\Models\Post;
+use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
-
-class PostController extends Controller // Controllerul gestionează toate acțiunile legate de modelul Post
+class PostController extends Controller
 {
     /**
-     * Afișează lista de postări (homepage).
-     * Se folosește în ruta GET /posts sau /
+     * Display a listing of the resource.
      */
     public function index()
     {
-       
-        $posts = Post::latest()->paginate(5); // Ia ultimele 5 postări paginate
-        return view('post.index', [     // Trimite datele către view-ul index.blade.php(din post folder)
-            
-            'posts' => $posts
-        ]);
+        $user  = auth()->user();
+
+        $query = Post::with(['user', 'media'])
+                    ->where('published_at', '<=', now())
+                    ->withCount('claps')
+                    ->latest();
+
+        if ($user) {
+            $ids = $user->following()->pluck('users.id')
+                    ->push($user->id)   //  ←  COPY-PASTE cele două linii
+                    ->unique();         //      peste blocul vechi cu $ids
+            $query->whereIn('user_id', $ids);
+        }
+
+        $posts = $query->simplePaginate(5);
+
+        return view('post.index', ['posts' => $posts]);
     }
 
+
     /**
-     * Afișează formularul de creare a unei noi postări.
-     * Se folosește în ruta GET /posts/create
+     * Show the form for creating a new resource.
      */
     public function create()
     {
         $categories = Category::get();
+        
         return view('post.create', [
-            'categories' => $categories
-        ]); // De obicei aici se returnează view-ul: return view('posts.create');
+            'categories' => $categories,
+        ]);
     }
 
     /**
-     * Stochează o nouă postare în baza de date.
-     * Se folosește în ruta POST /posts
+     * Store a newly created resource in storage.
      */
     public function store(PostCreateRequest $request)
     {
-        $data = $request -> validated();
+        $data = $request->validated();
+        $data['user_id']      = Auth::id();
+        $data['published_at'] = now();      //  ←  COPY-PASTE linia aceasta
 
-        $image = $data['image'];
-        //unset($data['image']);
-        $data['user_id'] = Auth::user()->id;
-        $data['slug'] = Str::slug($data['title']);
+        $post = Post::create($data);
 
-        $imagePath = $image->store('posts', 'public');
-        $data['image'] = $imagePath;
-
-        Post::create($data); // Validează, salvează și redirecționează postarea în DB
+        $post->addMediaFromRequest('image')
+            ->toMediaCollection();
 
         return redirect()->route('dashboard');
     }
 
     /**
-     * Afișează o singură postare individual.
-     * Se folosește în ruta GET /posts/{id}
+     * Display the specified resource.
      */
     public function show(string $username, Post $post)
     {
         return view('post.show', [
-            'post' => $post
-        ]); // return view('posts.show', compact('post'));
+            'post' => $post,
+        ]);
     }
 
     /**
-     * Afișează formularul de editare pentru o postare.
-     * Se folosește în ruta GET /posts/{id}/edit
+     * Show the form for editing the specified resource.
      */
     public function edit(Post $post)
     {
-        // return view('posts.edit', compact('post'));
+        if ($post->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $categories = Category::get();
+        return view('post.edit', [
+            'post' => $post,
+            'categories' => $categories,
+        ]);
     }
 
     /**
-     * Actualizează o postare existentă în DB.
-     * Se folosește în ruta PUT/PATCH /posts/{id}
+     * Update the specified resource in storage.
      */
-    public function update(Request $request, Post $post)
+    public function update(PostUpdateRequest $request, Post $post)
     {
-        // Validează și salvează modificările
+        if ($post->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $data = $request->validated();
+
+        $post->update($data);
+
+        if ($data['image'] ?? false) {
+            $post->addMediaFromRequest('image')
+                ->toMediaCollection();
+        }
+
+        return redirect()->route('myPosts');
     }
 
     /**
-     * Șterge o postare din DB.
-     * Se folosește în ruta DELETE /posts/{id}
+     * Remove the specified resource from storage.
      */
     public function destroy(Post $post)
     {
-        // $post->delete(); return redirect()->route('posts.index');
+        if ($post->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $post->delete();
+
+        return redirect()->route('dashboard');
     }
 
-    public function category(Category $category){
-        $posts = $category->posts()->latest()->simplePaginate(5);
+    public function category(Category $category)
+    {
+        $user  = auth()->user();
+
+        $query = $category->posts()
+                        ->where('published_at', '<=', now())
+                        ->with(['user', 'media'])
+                        ->withCount('claps')
+                        ->latest();
+
+        if ($user) {
+            $ids = $user->following()->pluck('users.id')
+                    ->push($user->id)   //  ←  COPY-PASTE la fel ca mai sus
+                    ->unique();
+            $query->whereIn('user_id', $ids);
+        }
+
+        $posts = $query->simplePaginate(5);
+
+        return view('post.index', ['posts' => $posts]);
+    }
+
+    public function myPosts()
+    {
+        $user = auth()->user();
+        $posts = $user->posts()
+            ->with(['user', 'media'])
+            ->withCount('claps')
+            ->latest()
+            ->simplePaginate(5);
+
         return view('post.index', [
-            'posts' => $posts
+            'posts' => $posts,
         ]);
     }
 }
-
-
-/**
- * PostController este un Resource Controller standard în Laravel.
- * Controlează tot fluxul CRUD pentru modelul Post:
- * - index() → listare cu pagination
- * - create()/store() → creare
- * - show() → afișare individuală
- * - edit()/update() → editare
- * - destroy() → ștergere
- * În plus, trimite datele (ex: $posts, $categories) către view-uri Blade pentru afișare curată.
- */
