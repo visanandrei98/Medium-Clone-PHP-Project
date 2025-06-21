@@ -1,61 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Medium-Clone · Laravel 12 + Tailwind
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Platformă de blogging tip Medium construită cu **Laravel 12**, Tailwind CSS și Alpine.js. Cod curat, pregătit pentru TDD, CI și deploy rapid.
 
-## About Laravel
+## Cuprins
+1. [Funcționalități](#funcționalități)
+2. [Stack Tehnic](#stack-tehnic)
+3. [Cerințe](#cerințe)
+4. [Instalare Rapidă](#instalare-rapidă)
+5. [Rulare Teste](#rulare-teste)
+6. [Structură Proiect](#structură-proiect)
+7. [Deploy](#deploy)
+8. [Contribuții](#contribuții)
+9. [Licență](#licență)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Funcționalități
+- **Articole CRUD** – create / edit / delete / publicare & retractare  
+- **Categorii & Tag-uri** – many-to-many via *spatie/laravel-tags*  
+- **Profil public** `/@username` – avatar, bio, articole utilizator  
+- **Follow / Unfollow** – social graph + counter live (pivot toggle)  
+- **Claps** – like-uri tip Medium pe articol cu numărătoare în timp real  
+- **Upload imagini** – *spatie/laravel-medialibrary* (single collection)  
+- **Autentificare & RBAC** – Breeze + *spatie/laravel-permission*  
+- **Slug-uri SEO** – *spatie/laravel-sluggable*  
+- **UI reactiv** – Alpine.js + Tailwind CSS, Vite HMR  
+- **Testare** – PHPUnit & Pest configurate, seed-uri și factory-uri gata
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Stack Tehnic
+| Layer       | Tehnologie / Pachet                |
+|-------------|------------------------------------|
+| Backend     | **PHP 8.3**, Laravel 12            |
+| Frontend    | Tailwind CSS 3, Alpine.js, Vite    |
+| Bază date   | MySQL 8 / MariaDB 10               |
+| Auth        | laravel/breeze                     |
+| Media       | spatie/laravel-medialibrary        |
+| RBAC        | spatie/laravel-permission          |
+| Slug-uri    | spatie/laravel-sluggable           |
+| Tag-uri     | spatie/laravel-tags                |
 
-## Learning Laravel
+## Cerințe
+- PHP ≥ 8.3 cu extensii: `bcmath`, `gd`, `mbstring`, `openssl`, `pdo`, `fileinfo`
+- Composer 2
+- Node ≥ 20 + npm ≥ 10
+- MySQL 8 / MariaDB 10
+- Git
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalare Rapidă
+```bash
+# 1. Clonează repo-ul
+git clone https://github.com/<user>/medium-clone.git
+cd medium-clone
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# 2. Instalează dependențele PHP
+composer install
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 3. Instalează dependențele JS
+npm install
 
-## Laravel Sponsors
+# 4. Config .env
+cp .env.example .env
+php artisan key:generate
+# editează DB_*, MAIL_*, etc. în .env
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 5. Migrare + seed
+php artisan migrate --seed
 
-### Premium Partners
+# 6. Link storage
+php artisan storage:link
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 7. Build front-end (dev cu HMR)
+npm run dev            # sau: npm run build pentru producție
 
-## Contributing
+# 8. Pornește serverul
+php artisan serve      # http://localhost:8000
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Code of Conduct
+#-------------Rulare Teste
+php artisan test        # PHPUnit
+./vendor/bin/pest       # dacă preferi Pest
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#-------------Structură Proiect
+app/                – controllere, modele, policies
+database/
+ ├─ migrations/     – definiții schemă
+ └─ seeders/        – date demo
+resources/
+ ├─ views/          – Blade + componente Tailwind
+ └─ js/             – Alpine.js
+routes/
+ ├─ web.php         – rute browser
+ └─ api.php         – rezervat pentru viitor API
 
-## Security Vulnerabilities
+#-------------Deploy
+npm run build – assets minificate
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+php artisan config:cache route:cache view:cache
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Pornește un worker dacă folosești queue:
