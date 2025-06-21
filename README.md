@@ -7,11 +7,7 @@
 2. [Stack Tehnic](#stack-tehnic)
 3. [Cerințe](#cerințe)
 4. [Instalare Rapidă](#instalare-rapidă)
-5. [Rulare Teste](#rulare-teste)
-6. [Structură Proiect](#structură-proiect)
-7. [Deploy](#deploy)
-8. [Contribuții](#contribuții)
-9. [Licență](#licență)
+
 
 ---
 
