@@ -1,161 +1,167 @@
-<?php
+<?php // Deschide fișierul PHP
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers; // Namespace PSR-4 → App\Http\Controllers
 
-use App\Http\Requests\PostCreateRequest;
-use App\Http\Requests\PostUpdateRequest;
-use App\Models\Post;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use App\Http\Requests\PostCreateRequest; // FormRequest pt. validarea la “store”
+use App\Http\Requests\PostUpdateRequest; // FormRequest pt. validarea la “update”
+use App\Models\Post;                     // Model Eloquent “posts”
+use App\Models\Category;                 // Model Eloquent “categories”
+use Illuminate\Http\Request;             // Request generic (nu-l folosim direct aici)
+use Illuminate\Support\Facades\Auth;     // Facade pentru autentificare
+use Illuminate\Support\Str;              // Helper stringuri (nu e folosit aici)
 
-class PostController extends Controller
+class PostController extends Controller // Controller resource pentru articole
 {
     /**
-     * Display a listing of the resource.
+     * Afișează lista de articole (feed).
      */
-    public function index()
+    public function index() // Route: GET / (alias “dashboard”)
     {
-        $user  = auth()->user();
+        $user  = auth()->user(); // Obține user logat (sau null dacă guest)
 
-        $query = Post::with(['user', 'media'])
-                    ->where('published_at', '<=', now())
-                    ->withCount('claps')
-                    ->latest();
+        $query = Post::with(['user', 'media'])   // eager-load relațiile “user” & “media”
+                    ->where('published_at', '<=', now()) // doar articole publicate
+                    ->withCount('claps')        // adaugă coloana virtuală claps_count
+                    ->latest();                 // ORDER BY created_at DESC
 
-        if ($user) {
-            $ids = $user->following()->pluck('users.id')
-                    ->push($user->id)   //  ←  COPY-PASTE cele două linii
-                    ->unique();         //      peste blocul vechi cu $ids
-            $query->whereIn('user_id', $ids);
+        if ($user) {                            // Dacă e logat…
+            $ids = $user->following()->pluck('users.id') // toți urmații
+                    ->push($user->id)           // + propriul ID
+                    ->unique();                // elimină duplicate
+            $query->whereIn('user_id', $ids);   // filtrează feed-ul
         }
 
-        $posts = $query->simplePaginate(5);
+        $posts = $query->simplePaginate(5);     // paginare simplă (fără count total)
 
-        return view('post.index', ['posts' => $posts]);
+        return view('post.index', [
+            'posts' => $posts]); // returnează Blade view
     }
 
-
     /**
-     * Show the form for creating a new resource.
+     * Formular creare articol.
      */
-    public function create()
+    public function create() // Route: GET /posts/create
     {
-        $categories = Category::get();
+        $categories = Category::get();          // fetch toate categoriile
         
-        return view('post.create', [
+        return view('post.create', [            // trimite categorii spre view
             'categories' => $categories,
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Salvează articol nou.
      */
-    public function store(PostCreateRequest $request)
+    public function store(PostCreateRequest $request) // Route: POST /posts
     {
-        $data = $request->validated();
-        $data['user_id']      = Auth::id();
-        $data['published_at'] = now();      //  ←  COPY-PASTE linia aceasta
+        $data = $request->validated();          // date curate după rules din FormRequest
+        $data['user_id']      = Auth::id();     // atribuie autorul
+        $data['published_at'] = now();          // publică imediat
 
-        $post = Post::create($data);
+        $post = Post::create($data);            // INSERT în DB
 
-        $post->addMediaFromRequest('image')
-            ->toMediaCollection();
+        $post->addMediaFromRequest('image')     // Spatie MediaLibrary – upload fișier
+            ->toMediaCollection();              // salvează în collection default
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard');  // redirect la feed
     }
 
     /**
-     * Display the specified resource.
+     * Afișează articolul individual.
      */
-    public function show(string $username, Post $post)
+    public function show(string $username, Post $post) // Route: GET /@user/{post}
     {
-        return view('post.show', [
+        return view('post.show', [              // View detaliu
             'post' => $post,
         ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Formular editare articol.
      */
-    public function edit(Post $post)
+    public function edit(Post $post) // Route: GET /posts/{post}/edit
     {
-        if ($post->user_id !== Auth::id()) {
-            abort(403);
+        if ($post->user_id !== Auth::id()) {    // Protecție: doar autorul editează
+            abort(403);                         // HTTP 403 Forbidden
         }
-        $categories = Category::get();
-        return view('post.edit', [
+        $categories = Category::get();          // categorii pt. dropdown
+        return view('post.edit', [              // trimite date spre view
             'post' => $post,
             'categories' => $categories,
         ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualizează articolul.
      */
-    public function update(PostUpdateRequest $request, Post $post)
+    public function update(PostUpdateRequest $request, Post $post) // PUT /posts/{post}
     {
-        if ($post->user_id !== Auth::id()) {
+        if ($post->user_id !== Auth::id()) {    // securitate autor
             abort(403);
         }
-        $data = $request->validated();
+        $data = $request->validated();          // rules din PostUpdateRequest
 
-        $post->update($data);
+        $post->update($data);                   // UPDATE în DB
 
-        if ($data['image'] ?? false) {
-            $post->addMediaFromRequest('image')
+        if ($data['image'] ?? false) {          // dacă vine imagine nouă…
+            $post->addMediaFromRequest('image') // upload + attach
                 ->toMediaCollection();
         }
 
-        return redirect()->route('myPosts');
+        return redirect()->route('myPosts');    // redirect la lista proprie
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Șterge articolul.
      */
-    public function destroy(Post $post)
+    public function destroy(Post $post) // DELETE /posts/{post}
     {
-        if ($post->user_id !== Auth::id()) {
+        if ($post->user_id !== Auth::id()) {    // numai autorul poate șterge
             abort(403);
         }
-        $post->delete();
+        $post->delete();                        // soft/hard delete (în funcție de model)
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard');  // back la feed
     }
 
-    public function category(Category $category)
+    /**
+     * Feed filtrat pe categorie.
+     */
+    public function category(Category $category) // Route: GET /category/{category}
     {
-        $user  = auth()->user();
+        $user  = auth()->user();                // user curent sau null
 
-        $query = $category->posts()
-                        ->where('published_at', '<=', now())
-                        ->with(['user', 'media'])
-                        ->withCount('claps')
-                        ->latest();
+        $query = $category->posts()             // posts() = relație în Model Category
+                        ->where('published_at', '<=', now()) // doar publicate
+                        ->with(['user', 'media']) // eager-load
+                        ->withCount('claps')      // counter
+                        ->latest();               // sort desc
 
-        if ($user) {
+        if ($user) {                             // filtre feed ca în index()
             $ids = $user->following()->pluck('users.id')
-                    ->push($user->id)   //  ←  COPY-PASTE la fel ca mai sus
+                    ->push($user->id)
                     ->unique();
             $query->whereIn('user_id', $ids);
         }
 
-        $posts = $query->simplePaginate(5);
+        $posts = $query->simplePaginate(5);     // paginare
 
-        return view('post.index', ['posts' => $posts]);
+        return view('post.index', ['posts' => $posts]); // aceeași view reutilizată
     }
 
-    public function myPosts()
+    /**
+     * Lista articolelor mele.
+     */
+    public function myPosts() // Route: GET /my-posts
     {
-        $user = auth()->user();
-        $posts = $user->posts()
-            ->with(['user', 'media'])
-            ->withCount('claps')
-            ->latest()
-            ->simplePaginate(5);
+        $user = auth()->user();                 // user curent
+        $posts = $user->posts()                 // relație “posts” pe Model User
+            ->with(['user', 'media'])           // eager-load
+            ->withCount('claps')                // counter
+            ->latest()                          // sort desc
+            ->simplePaginate(5);                // paginare
 
-        return view('post.index', [
+        return view('post.index', [             // reuse view index
             'posts' => $posts,
         ]);
     }
